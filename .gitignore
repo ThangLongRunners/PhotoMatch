@@ -205,3 +205,93 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# ========================================
+# Node.js & Frontend
+# ========================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Frontend build output
+frontend/dist/
+frontend/build/
+frontend/.vite/
+frontend/.cache/
+
+# ========================================
+# Docker & Containers
+# ========================================
+# Docker volumes
+postgres_data/
+insightface_models/
+
+# ========================================
+# Application Data & Media
+# ========================================
+# Uploaded images and data
+backend/data/images/*
+!backend/data/images/.gitkeep
+
+# Temporary files
+/tmp/
+*.tmp
+*.temp
+
+# ========================================
+# IDE & Editor
+# ========================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ========================================
+# Environment & Secrets
+# ========================================
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# ========================================
+# Logs & Databases
+# ========================================
+*.log
+*.sql
+*.sqlite
+*.db
+
+# ========================================
+# OS Files
+# ========================================
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# ========================================
+# Model Files (Large files)
+# ========================================
+*.onnx
+*.pkl
+*.pth
+*.pt
+*.h5
+*.pb
+!backend/app/models/
+
+# ========================================
+# Backup & Archive
+# ========================================
+*.bak
+*.backup
+*.old
+*.orig

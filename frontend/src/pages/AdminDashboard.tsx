@@ -28,6 +28,7 @@ const AdminDashboard: React.FC = () => {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadEventTag, setUploadEventTag] = useState('');
+  const [viewingImage, setViewingImage] = useState<Photo | null>(null);
   const navigate = useNavigate();
 
   const username = localStorage.getItem('adminUsername');
@@ -45,6 +46,32 @@ const AdminDashboard: React.FC = () => {
     return {
       'Authorization': `Basic ${btoa('admin:admin')}`,
     };
+  };
+
+  const getImageUrl = (imageUrl: string): string => {
+    if (imageUrl.startsWith('http')) {
+      return imageUrl;
+    }
+    return `http://localhost:8000${imageUrl}`;
+  };
+
+  const handleDownloadImage = async (photo: Photo) => {
+    try {
+      const imageUrl = getImageUrl(photo.image_url);
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = photo.path.split('/').pop() || 'image.jpg';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading image:', error);
+      alert('Lỗi khi tải ảnh');
+    }
   };
 
   const loadData = async () => {
@@ -263,15 +290,18 @@ const AdminDashboard: React.FC = () => {
             <div className="photos-grid">
               {photos.map((photo) => (
                 <div key={photo.id} className="photo-card">
-                  <div className="photo-image-container">
+                  <div className="photo-image-container" onClick={() => setViewingImage(photo)}>
                     <img
-                      src={photo.image_url}
+                      src={getImageUrl(photo.image_url)}
                       alt={photo.path}
                       className="photo-image"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23ddd" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23999"%3ENo Image%3C/text%3E%3C/svg%3E';
                       }}
                     />
+                    <div className="image-overlay">
+                      <span className="zoom-icon">🔍</span>
+                    </div>
                     {photo.face_count !== undefined && photo.face_count > 0 && (
                       <div className="face-badge">{photo.face_count} khuôn mặt</div>
                     )}
@@ -318,12 +348,20 @@ const AdminDashboard: React.FC = () => {
 
                     <div className="photo-actions">
                       {editingPhoto !== photo.id && (
-                        <button
-                          onClick={() => handleEditTag(photo)}
-                          className="btn-edit"
-                        >
-                          ✏️ Sửa tag
-                        </button>
+                        <>
+                          <button
+                            onClick={() => handleEditTag(photo)}
+                            className="btn-edit"
+                          >
+                            ✏️ Sửa tag
+                          </button>
+                          <button
+                            onClick={() => handleDownloadImage(photo)}
+                            className="btn-download"
+                          >
+                            📥 Tải về
+                          </button>
+                        </>
                       )}
                       <button
                         onClick={() => handleDelete(photo.id)}
@@ -339,6 +377,47 @@ const AdminDashboard: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Image Viewer Modal */}
+      {viewingImage && (
+        <div className="image-modal" onClick={() => setViewingImage(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>{viewingImage.path.split('/').pop()}</h3>
+              <div className="modal-actions">
+                <button
+                  onClick={() => handleDownloadImage(viewingImage)}
+                  className="btn-modal-download"
+                >
+                  📥 Tải về
+                </button>
+                <button
+                  onClick={() => setViewingImage(null)}
+                  className="btn-modal-close"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+            <div className="modal-body">
+              <img
+                src={getImageUrl(viewingImage.image_url)}
+                alt={viewingImage.path}
+                className="modal-image"
+              />
+            </div>
+            <div className="modal-footer">
+              <div className="modal-info">
+                <span>📐 {viewingImage.width} × {viewingImage.height}</span>
+                {viewingImage.event_tag && <span>🏷️ {viewingImage.event_tag}</span>}
+                {viewingImage.face_count !== undefined && viewingImage.face_count > 0 && (
+                  <span>👤 {viewingImage.face_count} khuôn mặt</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

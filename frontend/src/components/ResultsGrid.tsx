@@ -23,6 +23,7 @@ const ResultsGrid: React.FC<ResultsGridProps> = ({
   showSimilarity = true
 }) => {
   const [internalPage, setInternalPage] = useState(1);
+  const [viewingImage, setViewingImage] = useState<SearchResult | null>(null);
 
   useEffect(() => {
     if (externalPage) {
@@ -59,6 +60,25 @@ const ResultsGrid: React.FC<ResultsGridProps> = ({
     }
   };
 
+  const handleDownloadImage = async (result: SearchResult) => {
+    try {
+      const imageUrl = getImageUrl(result.image_url);
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `photo-${result.photo_id}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading image:', error);
+      alert('Lỗi khi tải ảnh');
+    }
+  };
+
   return (
     <div style={styles.container}>
       <div style={styles.header}>
@@ -76,7 +96,7 @@ const ResultsGrid: React.FC<ResultsGridProps> = ({
       <div style={styles.grid}>
         {currentResults.map((result) => (
           <div key={result.photo_id} style={styles.card}>
-            <div style={styles.imageContainer}>
+            <div style={styles.imageContainer} onClick={() => setViewingImage(result)}>
               <img
                 src={getImageUrl(result.image_url)}
                 alt={`Match ${result.photo_id}`}
@@ -90,14 +110,29 @@ const ResultsGrid: React.FC<ResultsGridProps> = ({
                   </div>
                 </div>
               )}
+              <div style={styles.hoverOverlay}>
+                <span style={styles.zoomIcon}>🔍</span>
+              </div>
             </div>
             <div style={styles.cardInfo}>
-              {result.event_tag && (
-                <span style={styles.eventTag}>{result.event_tag}</span>
-              )}
-              <div style={styles.dimensions}>
-                {result.width} × {result.height}
+              <div style={styles.infoLeft}>
+                {result.event_tag && (
+                  <span style={styles.eventTag}>{result.event_tag}</span>
+                )}
+                <div style={styles.dimensions}>
+                  {result.width} × {result.height}
+                </div>
               </div>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDownloadImage(result);
+                }}
+                style={styles.downloadButton}
+                title="Tải ảnh"
+              >
+                📥
+              </button>
             </div>
           </div>
         ))}
@@ -141,6 +176,47 @@ const ResultsGrid: React.FC<ResultsGridProps> = ({
           >
             Next →
           </button>
+        </div>
+      )}
+
+      {/* Image Viewer Modal */}
+      {viewingImage && (
+        <div style={styles.imageModal} onClick={() => setViewingImage(null)}>
+          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div style={styles.modalHeader}>
+              <h3 style={styles.modalTitle}>Photo {viewingImage.photo_id}</h3>
+              <div style={styles.modalActions}>
+                <button
+                  onClick={() => handleDownloadImage(viewingImage)}
+                  style={styles.btnModalDownload}
+                >
+                  📥 Tải về
+                </button>
+                <button
+                  onClick={() => setViewingImage(null)}
+                  style={styles.btnModalClose}
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+            <div style={styles.modalBody}>
+              <img
+                src={getImageUrl(viewingImage.image_url)}
+                alt={`Photo ${viewingImage.photo_id}`}
+                style={styles.modalImage}
+              />
+            </div>
+            <div style={styles.modalFooter}>
+              <div style={styles.modalInfo}>
+                <span>📐 {viewingImage.width} × {viewingImage.height}</span>
+                {viewingImage.event_tag && <span>🏷️ {viewingImage.event_tag}</span>}
+                {showSimilarity && (
+                  <span>🎯 {(viewingImage.similarity * 100).toFixed(1)}% match</span>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -215,6 +291,23 @@ const styles: { [key: string]: React.CSSProperties } = {
     justifyContent: 'center',
     padding: '12px',
   },
+  hoverOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'rgba(0, 0, 0, 0.5)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    opacity: 0,
+    transition: 'opacity 0.2s',
+  },
+  zoomIcon: {
+    fontSize: '48px',
+    filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))',
+  },
   similarityBadge: {
     backgroundColor: '#48bb78',
     color: 'white',
@@ -228,6 +321,22 @@ const styles: { [key: string]: React.CSSProperties } = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  infoLeft: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+    flex: 1,
+  },
+  downloadButton: {
+    background: '#4caf50',
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    padding: '6px 10px',
+    cursor: 'pointer',
+    fontSize: '16px',
+    transition: 'all 0.2s',
   },
   eventTag: {
     fontSize: '13px',
@@ -302,6 +411,95 @@ const styles: { [key: string]: React.CSSProperties } = {
     backgroundColor: '#4299e1',
     borderColor: '#4299e1',
   },
+  // Modal styles
+  imageModal: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'rgba(0, 0, 0, 0.9)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+    padding: '20px',
+  },
+  modalContent: {
+    background: 'white',
+    borderRadius: '12px',
+    maxWidth: '90vw',
+    maxHeight: '90vh',
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
+  },
+  modalHeader: {
+    padding: '20px',
+    borderBottom: '2px solid #f0f0f0',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    margin: 0,
+    fontSize: '18px',
+    color: '#333',
+  },
+  modalActions: {
+    display: 'flex',
+    gap: '10px',
+  },
+  btnModalDownload: {
+    padding: '10px 20px',
+    background: '#4caf50',
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontWeight: '500',
+    transition: 'all 0.2s',
+  },
+  btnModalClose: {
+    padding: '10px 15px',
+    background: '#f44336',
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    fontSize: '18px',
+    lineHeight: 1,
+    transition: 'all 0.2s',
+  },
+  modalBody: {
+    flex: 1,
+    overflow: 'auto',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '20px',
+    background: '#f5f5f5',
+  },
+  modalImage: {
+    maxWidth: '100%',
+    maxHeight: '100%',
+    objectFit: 'contain',
+    borderRadius: '8px',
+    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
+  },
+  modalFooter: {
+    padding: '15px 20px',
+    borderTop: '2px solid #f0f0f0',
+    background: 'white',
+  },
+  modalInfo: {
+    display: 'flex',
+    gap: '20px',
+    flexWrap: 'wrap',
+    color: '#666',
+    fontSize: '14px',
+  },
 };
 
 // Add hover effect via CSS-in-JS workaround
@@ -314,7 +512,16 @@ styleSheet.textContent = `
   div[style*="cursor: pointer"]:hover div[style*="opacity: 0"] {
     opacity: 1 !important;
   }
+  button[style*="background: rgb(76, 175, 80)"]:hover {
+    background: #45a049 !important;
+  }
+  button[style*="background: rgb(244, 67, 54)"]:hover {
+    background: #d32f2f !important;
+  }
 `;
-document.head.appendChild(styleSheet);
+if (!document.head.querySelector('style[data-results-grid]')) {
+  styleSheet.setAttribute('data-results-grid', 'true');
+  document.head.appendChild(styleSheet);
+}
 
 export default ResultsGrid;

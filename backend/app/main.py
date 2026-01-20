@@ -2,6 +2,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.responses import Response
 from pathlib import Path
 import logging
 
@@ -16,6 +17,23 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
+
+
+# Custom StaticFiles with CORS headers
+class CORSStaticFiles(StaticFiles):
+    async def __call__(self, scope, receive, send):
+        async def send_wrapper(message):
+            if message["type"] == "http.response.start":
+                # Add CORS headers to all static file responses
+                headers = list(message.get("headers", []))
+                headers.append((b"access-control-allow-origin", b"*"))
+                headers.append((b"access-control-allow-methods", b"GET, OPTIONS"))
+                headers.append((b"access-control-allow-headers", b"*"))
+                message["headers"] = headers
+            await send(message)
+        
+        await super().__call__(scope, receive, send_wrapper)
+
 
 # Create FastAPI app
 app = FastAPI(
@@ -41,13 +59,13 @@ app.include_router(routes_ingest.router, tags=["ingest"])
 app.include_router(routes_search.router, tags=["search"])
 app.include_router(routes_admin.router, tags=["admin"])
 
-# Mount static files for serving images
+# Mount static files for serving images with CORS support
 images_path = Path(settings.images_folder)
 images_path.mkdir(parents=True, exist_ok=True)
 
 app.mount(
     settings.static_mount_path,
-    StaticFiles(directory=str(images_path)),
+    CORSStaticFiles(directory=str(images_path)),
     name="static"
 )
 

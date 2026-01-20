@@ -24,6 +24,8 @@ class SearchResult(BaseModel):
     event_tag: Optional[str] = None
     width: int
     height: int
+    face_bbox: Optional[dict] = None  # Bounding box of matched face: {x1, y1, x2, y2}
+    is_primary: bool = False  # Whether this is the primary/largest face in photo
 
 
 class SearchResponse(BaseModel):

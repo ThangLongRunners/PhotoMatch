@@ -43,6 +43,28 @@ def select_largest_face(faces: List[dict]) -> Optional[dict]:
     return largest_face
 
 
+def select_top_n_faces(faces: List[dict], n: int = 3) -> List[dict]:
+    """
+    Select the top N largest faces by bounding box area
+    
+    Args:
+        faces: List of face dictionaries with 'bbox' key
+        n: Number of largest faces to return (default: 3)
+        
+    Returns:
+        List of up to N faces sorted by area (largest first)
+    """
+    if not faces:
+        return []
+    
+    # Compute area for each face and sort by area (descending)
+    faces_with_area = [(face, compute_bbox_area(face['bbox'])) for face in faces]
+    faces_with_area.sort(key=lambda x: x[1], reverse=True)
+    
+    # Return top N faces
+    return [face for face, area in faces_with_area[:n]]
+
+
 def normalize_bbox(bbox: List[float]) -> Tuple[int, int, int, int]:
     """
     Normalize bounding box to integers

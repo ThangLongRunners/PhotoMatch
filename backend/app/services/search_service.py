@@ -39,6 +39,7 @@ class SearchService:
             List of SearchResult objects sorted by similarity (descending)
         """
         # Build query with optional event_tag filter
+        # Search across ALL faces in database, not just primary faces
         query = """
             SELECT 
                 p.id as photo_id,
@@ -46,10 +47,15 @@ class SearchService:
                 p.width,
                 p.height,
                 p.event_tag,
+                f.x1,
+                f.y1,
+                f.x2,
+                f.y2,
+                f.is_primary,
                 1 - (f.embedding <=> %s::vector) as similarity
             FROM faces f
             JOIN photos p ON f.photo_id = p.id
-            WHERE f.is_primary = true
+            WHERE 1=1
         """
         
         params = [query_embedding]
@@ -79,7 +85,14 @@ class SearchService:
                         similarity=float(row['similarity']),
                         event_tag=row['event_tag'],
                         width=row['width'],
-                        height=row['height']
+                        height=row['height'],
+                        face_bbox={
+                            'x1': row['x1'],
+                            'y1': row['y1'],
+                            'x2': row['x2'],
+                            'y2': row['y2']
+                        },
+                        is_primary=row['is_primary']
                     )
                 )
             

@@ -6,7 +6,7 @@ import uuid
 
 from ..core.db import get_db
 from ..utils.image_io import load_image, compute_sha1, get_supported_images
-from ..utils.bbox import normalize_bbox
+from ..utils.bbox import normalize_bbox, select_top_n_faces
 from .face_embedder import face_embedder
 from .face_detector import face_detector
 from .image_store import image_store
@@ -63,18 +63,16 @@ class IngestService:
             # Load image
             image, width, height = load_image(file_path)
             
-            # Detect largest face and get embedding
-            face = face_detector.detect_largest_face(image)
+            # Detect all faces
+            all_faces = face_detector.detect_faces(image)
             
-            if face is None:
+            if not all_faces:
                 logger.warning(f"No face detected in: {file_path}")
                 return False, "no_face"
             
-            # Get normalized embedding
-            embedding = face_embedder.normalize_embedding(face['embedding'])
-            
-            # Get normalized bbox
-            x1, y1, x2, y2 = normalize_bbox(face['bbox'])
+            # Select top 3 largest faces
+            top_faces = select_top_n_faces(all_faces, n=3)
+            logger.info(f"Selected {len(top_faces)} largest faces from {len(all_faces)} detected")
             
             # Get relative path for storage
             relative_path = image_store.get_relative_path(file_path)
@@ -89,18 +87,28 @@ class IngestService:
                 (photo_id, relative_path, sha1_hash, width, height, event_tag)
             )
             
-            # Insert face record with embedding
-            face_id = str(uuid.uuid4())
-            # Convert embedding to list for pgvector
-            embedding_list = embedding.tolist()
-            
-            self.db.execute(
-                """
-                INSERT INTO faces (id, photo_id, x1, y1, x2, y2, embedding, is_primary)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                """,
-                (face_id, photo_id, x1, y1, x2, y2, embedding_list, True)
-            )
+            # Insert face records (mark first/largest as primary)
+            for idx, face in enumerate(top_faces):
+                # Get normalized embedding
+                embedding = face_embedder.normalize_embedding(face['embedding'])
+                
+                # Get normalized bbox
+                x1, y1, x2, y2 = normalize_bbox(face['bbox'])
+                
+                # Insert face record with embedding
+                face_id = str(uuid.uuid4())
+                # Convert embedding to list for pgvector
+                embedding_list = embedding.tolist()
+                
+                is_primary = (idx == 0)  # First face is primary (largest)
+                
+                self.db.execute(
+                    """
+                    INSERT INTO faces (id, photo_id, x1, y1, x2, y2, embedding, is_primary)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    """,
+                    (face_id, photo_id, x1, y1, x2, y2, embedding_list, is_primary)
+                )
             
             logger.info(f"Successfully ingested: {file_path} (photo_id={photo_id})")
             return True, "success"

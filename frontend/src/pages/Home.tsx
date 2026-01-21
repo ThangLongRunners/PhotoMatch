@@ -173,7 +173,7 @@ const Home: React.FC = () => {
 const styles: { [key: string]: React.CSSProperties } = {
   container: {
     minHeight: '100vh',
-    backgroundColor: '#f7fafc',
+    backgroundColor: 'transparent',
     padding: '40px 20px',
   },
   header: {

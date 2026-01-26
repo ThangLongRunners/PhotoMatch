@@ -52,7 +52,7 @@ const AdminDashboard: React.FC = () => {
     if (imageUrl.startsWith('http')) {
       return imageUrl;
     }
-    return `http://localhost:8000${imageUrl}`;
+    return `http://localhost:8001${imageUrl}`;
   };
 
   const handleDownloadImage = async (photo: Photo) => {

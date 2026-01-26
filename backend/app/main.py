@@ -53,11 +53,11 @@ app.add_middleware(
     max_age=3600,
 )
 
-# Include routers
-app.include_router(routes_health.router, tags=["health"])
-app.include_router(routes_ingest.router, tags=["ingest"])
-app.include_router(routes_search.router, tags=["search"])
-app.include_router(routes_admin.router, tags=["admin"])
+# Include routers with /api prefix
+app.include_router(routes_health.router, prefix="/api", tags=["health"])
+app.include_router(routes_ingest.router, prefix="/api", tags=["ingest"])
+app.include_router(routes_search.router, prefix="/api", tags=["search"])
+app.include_router(routes_admin.router, prefix="/api", tags=["admin"])
 
 # Mount static files for serving images with CORS support
 images_path = Path(settings.images_folder)

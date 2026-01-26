@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.3'
 
 services:
   postgres:
@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: photomatch
     ports:
-      - "5432:5432"
+      - "5434:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/migrations:/docker-entrypoint-initdb.d
@@ -25,7 +25,7 @@ services:
       dockerfile: Dockerfile
     container_name: photomatch-backend
     ports:
-      - "8000:8000"
+      - "8001:8001"
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/photomatch
       IMAGES_FOLDER: /app/data/images
@@ -33,8 +33,7 @@ services:
       - ./backend/data/images:/app/data/images
       - insightface_models:/root/.insightface
     depends_on:
-      postgres:
-        condition: service_healthy
+      - postgres
     restart: unless-stopped
     security_opt:
       - seccomp:unconfined

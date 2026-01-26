@@ -70,7 +70,7 @@ docker-compose logs -f
 
 This will start:
 - PostgreSQL with pgvector (port 5432)
-- Backend API (port 8000)
+- Backend API (port 8001)
 - Frontend UI (port 3000)
 
 ### 3. Initialize Database
@@ -80,8 +80,8 @@ The database schema is automatically initialized on first run via the migration 
 ### 4. Access the Application
 
 - **Frontend UI**: http://localhost:3000
-- **Backend API**: http://localhost:8000
-- **API Docs**: http://localhost:8000/docs
+- **Backend API**: http://localhost:8001
+- **API Docs**: http://localhost:8001/docs
 
 ## 📸 Usage
 
@@ -99,7 +99,7 @@ The database schema is automatically initialized on first run via the migration 
 #### Ingest Images
 
 ```bash
-curl -X POST "http://localhost:8000/ingest/folder" \
+curl -X POST "http://localhost:8001/ingest/folder" \
   -H "Content-Type: application/json" \
   -d '{
     "path": "data/images",
@@ -111,7 +111,7 @@ curl -X POST "http://localhost:8000/ingest/folder" \
 #### Search by Image
 
 ```bash
-curl -X POST "http://localhost:8000/search?top_k=30&threshold=0.6" \
+curl -X POST "http://localhost:8001/search?top_k=30&threshold=0.6" \
   -F "file=@/path/to/query_image.jpg"
 ```
 
@@ -152,7 +152,7 @@ psql -U postgres -d photomatch -f migrations/001_init.sql
 psql -U postgres -d photomatch -f migrations/002_indexes.sql
 
 # Run development server
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
 ```
 
 ### Frontend Development
@@ -279,7 +279,7 @@ WITH (m = 16, ef_construction = 64);
 
 ```bash
 # Test health endpoint
-curl http://localhost:8000/health
+curl http://localhost:8001/health
 
 # Check database connection
 docker-compose exec postgres psql -U postgres -d photomatch -c "SELECT COUNT(*) FROM photos;"

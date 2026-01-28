@@ -26,5 +26,5 @@ RUN mkdir -p data/images
 # Expose port
 EXPOSE 8001
 
-# Run application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001"]
+# Run application with increased limits for file uploads
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001", "--limit-max-requests", "10000", "--limit-concurrency", "1000"]

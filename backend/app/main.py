@@ -35,7 +35,7 @@ class CORSStaticFiles(StaticFiles):
         await super().__call__(scope, receive, send_wrapper)
 
 
-# Create FastAPI app
+# Create FastAPI app with increased limits
 app = FastAPI(
     title="PhotoMatch API",
     description="Face image search application using pgvector and InsightFace",

@@ -97,8 +97,11 @@ export const checkHealth = async (): Promise<HealthResponse> => {
 
 // Helper to get full image URL
 export const getImageUrl = (imageUrl: string): string => {
+  // If already an absolute URL, return as-is
   if (imageUrl.startsWith('http')) {
     return imageUrl;
   }
-  return `${API_BASE_URL}${imageUrl}`;
+  // If it's a relative path (e.g., /static/...), return as-is
+  // The browser will handle it relative to the current origin
+  return imageUrl;
 };

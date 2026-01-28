@@ -11,7 +11,7 @@ from ..models.schemas import (
 )
 from ..services.admin_service import admin_service
 
-router = APIRouter(prefix="/api/admin")
+router = APIRouter(prefix="/admin")
 security = HTTPBasic()
 
 

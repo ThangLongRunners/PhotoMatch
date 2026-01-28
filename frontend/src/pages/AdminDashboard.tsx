@@ -49,10 +49,8 @@ const AdminDashboard: React.FC = () => {
   };
 
   const getImageUrl = (imageUrl: string): string => {
-    if (imageUrl.startsWith('http')) {
-      return imageUrl;
-    }
-    return `http://localhost:8001${imageUrl}`;
+    // Return as-is - should be relative path or full URL
+    return imageUrl;
   };
 
   const handleDownloadImage = async (photo: Photo) => {

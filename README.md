@@ -20,9 +20,10 @@ Face image search web application powered by AI. Upload a photo containing a fac
 - **Backend**: Python FastAPI
 - **Frontend**: React + TypeScript (Vite)
 - **Database**: PostgreSQL 15 + pgvector extension
-- **Face AI**: InsightFace (buffalo_l model)
+- **Face AI**: InsightFace (buffalo_l model) with PyTorch + CUDA
+- **GPU Acceleration**: NVIDIA CUDA 12.1 + cuDNN 8
 - **Storage**: Local filesystem served via FastAPI StaticFiles
-- **Deployment**: Docker + Docker Compose
+- **Deployment**: Docker + Docker Compose with GPU support
 
 ### Core Components
 
@@ -46,8 +47,18 @@ Face image search web application powered by AI. Upload a photo containing a fac
 ## 📋 Prerequisites
 
 - Docker & Docker Compose
-- 4GB+ RAM recommended
+- **NVIDIA GPU with CUDA support** (recommended for best performance)
+- NVIDIA Container Toolkit (for GPU support)
+- 6GB+ GPU VRAM recommended (or 4GB+ RAM for CPU mode)
 - 2GB+ disk space for models and data
+
+### GPU Support (Recommended)
+
+This application is optimized for GPU acceleration:
+- **5-10x faster** face detection and embedding
+- Uses PyTorch with CUDA for maximum accuracy
+- No ONNX quantization - full model precision
+- See [GPU_SETUP.md](GPU_SETUP.md) for installation instructions
 
 ## 🛠️ Installation & Setup
 

@@ -5,10 +5,16 @@ pillow==10.2.0
 numpy==1.26.3
 psycopg[binary]==3.1.18
 pgvector==0.2.4
-onnxruntime==1.17.3
+# PyTorch with CUDA 12.1 support - for GPU acceleration
+torch==2.1.2
+torchvision==0.16.2
 opencv-python-headless==4.9.0.80
+# InsightFace for face detection and recognition
 insightface==0.7.3
 python-dotenv==1.0.0
 pydantic==2.5.3
 pydantic-settings==2.1.0
 aiofiles==23.2.1
+# ONNX Runtime GPU for InsightFace models
+onnx==1.15.0
+onnxruntime-gpu==1.17.1

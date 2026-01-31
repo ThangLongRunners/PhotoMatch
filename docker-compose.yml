@@ -29,6 +29,8 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/photomatch
       IMAGES_FOLDER: /app/data/images
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility
     volumes:
       - ./backend/data/images:/app/data/images
       - insightface_models:/root/.insightface

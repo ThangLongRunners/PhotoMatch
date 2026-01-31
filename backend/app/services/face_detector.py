@@ -24,15 +24,29 @@ class FaceDetector:
         try:
             # Import InsightFace only when needed (lazy loading)
             from insightface.app import FaceAnalysis
+            import torch
             
-            logger.info(f"Initializing face detector with model: {settings.embedding_model}")
+            # Check GPU availability
+            if torch.cuda.is_available():
+                ctx_id = 0  # Use GPU 0
+                device = "cuda:0"
+                logger.info(f"GPU detected: {torch.cuda.get_device_name(0)}")
+                logger.info(f"CUDA version: {torch.version.cuda}")
+            else:
+                ctx_id = -1  # Use CPU
+                device = "cpu"
+                logger.warning("No GPU detected, using CPU")
+            
+            logger.info(f"Initializing face detector with model: {settings.embedding_model} on {device}")
             self.app = FaceAnalysis(
                 name=settings.embedding_model,
+                providers=['CUDAExecutionProvider', 'CPUExecutionProvider'] if ctx_id >= 0 else ['CPUExecutionProvider'],
                 allowed_modules=['detection', 'recognition']
             )
-            self.app.prepare(ctx_id=0, det_size=(640, 640))
+            # Use larger detection size for better accuracy
+            self.app.prepare(ctx_id=ctx_id, det_size=(640, 640))
             self._initialized = True
-            logger.info("Face detector initialized successfully")
+            logger.info("Face detector initialized successfully on GPU" if ctx_id >= 0 else "Face detector initialized on CPU")
         except Exception as e:
             logger.error(f"Failed to initialize face detector: {e}")
             raise
